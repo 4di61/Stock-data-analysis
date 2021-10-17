@@ -1,3 +1,4 @@
+from logging import disable
 import plotly.express as px
 import dash
 from datetime import date
@@ -8,7 +9,7 @@ from dash.dependencies import Output, Input, State
 import dash_bootstrap_components as dbc
 import pandas as pd
 from app import app
-from data import all_stock_df
+from data import all_stock_df,industries
 
 stocks_layout = html.Div(
     [
@@ -17,14 +18,14 @@ stocks_layout = html.Div(
             [
                 dbc.Col(
                     [
-                        html.Label("Select sector"),
+                        html.Label("Select Sector"),
                         dcc.Dropdown(
-                            id="dd-sector",
+                            id="dd-sector-single",
                             multi=False,
-                            value="",
+                            value=list(industries.keys())[0],
                             options=[
                                 {"label": industry, "value": industry}
-                                for industry in all_stock_df["Industry"].unique()
+                                for industry in industries.keys()
                             ],
                             clearable=False,
                         ),
@@ -33,15 +34,12 @@ stocks_layout = html.Div(
                 ),
                 dbc.Col(
                     [
-                        html.Label("Select stocks"),
+                        html.Label("Select Stocks"),
                         dcc.Dropdown(
-                            id="dd-stock",
+                            id="dd-stock-multi",
                             multi=True,
                             value="",
-                            options=[
-                                {"label": stock, "value": stock}
-                                for stock in all_stock_df["Symbol"].unique()
-                            ],
+                            options=[],
                             clearable=False,
                         ),
                     ],
@@ -51,18 +49,30 @@ stocks_layout = html.Div(
                     [
                         html.Label("Select Date Range"),
                         dcc.DatePickerRange(
-                            id='date-picker-range',
-                            min_date_allowed=all_stock_df["Date"].min(),
-                            max_date_allowed=all_stock_df["Date"].max(),
-                            initial_visible_month=date.today(),
-                            start_date=all_stock_df["Date"].min(),
-                            end_date=all_stock_df["Date"].max()
+                            id='date-picker-range-stock',
                         )
                     ],
                     width=4,
                 ),
+                dbc.Row(
+                    [
+                        dbc.Col([daq.BooleanSwitch(
+                            id="switch-candle",
+                            label='Candle stick',
+                            labelPosition='bottom'
+                        )], style={"paddingLeft": "2rem", "paddingTop": "1rem"}),
+                        dbc.Col([
+                            daq.BooleanSwitch(
+                                id="switch-percent",
+                                label='Percent change',
+                                labelPosition='bottom'
+                            )], style={"paddingLeft": "2rem", "paddingTop": "1rem"}),
+                        dbc.Button("Apply changes", color="info",
+                                   className="mr-1", id="btn-stock-run", style={"margin": "2rem"}),
+                    ]),
             ],
             className="mt-4",
+
         ),
         # Candlestick graph row
         dbc.Row(
@@ -70,100 +80,81 @@ stocks_layout = html.Div(
 
                 dbc.Col(
                     [
-                        dcc.Graph(id="stock_graph", figure={}),
+                        dcc.Graph(id="graph-stock", figure={}),
                         dcc.Slider(
-                            id='slider_moving_average',
+                            id='slider-moving-average',
                             min=1,
                             max=100,
                             step=1,
                             value=1,
+                            tooltip={"placement": "top"}
                         ),
-                        html.Div(id='slider-output-container',
-                                 children="1", style={'textAlign': 'center'}),
 
                     ],
                     width=7),
-                dbc.Col(
-                    [
-                        daq.ToggleSwitch(
-                            label='Candle stick',
-                            labelPosition='bottom'
-                        ),
-                        daq.ToggleSwitch(
-                            label='Percent change',
-                            labelPosition='bottom'
-                        ),
-                    ], width=1, style={'marginTop': '8rem'}),
+
 
                 dbc.Col(
                     [
-                        dcc.Graph(id="stock_graph", figure={})
+                        daq.Gauge(
+                            style={"marginTop": "6rem"},
+                            id='gauge-stock',
+                            label="Bearish-Bullish",
+                            value=6
+                        ),
                     ],
-                    width=4),
+                    width=5),
             ]
         ),
-        # Word chart row
+        # radar chart row
         dbc.Row(
             [
                 dbc.Col(
                     [
-                        html.P(
-                            id="notification",
-                            children="blwch",
-                            style={"textAlign": "center"},
-                        )
+                        dcc.Graph(id="radar-stock", figure={})
                     ],
-                    width=12,
-                )
+                    width=6),
+
+
+                dbc.Col(
+                    [
+                        dcc.Graph(id="indicator-stock", figure={})
+                    ],
+                    width=6),
             ]
         ),
     ]
 )
 
 
-# # pull data from twitter and create the figures
-# @app.callback(
-#     Output(component_id="myscatter", component_property="figure"),
-#     Output(component_id="myscatter2", component_property="figure"),
-#     Output(component_id="notification", component_property="children"),
-#     Input(component_id="hit-button", component_property="n_clicks"),
-#     State(component_id="count-mentions", component_property="value"),
-#     State(component_id="input-handle", component_property="value"),
-# )
-# def display_value(nclicks, num, acnt_handle):
-#     results = api.GetSearch(
-#         raw_query=f"q=%40{acnt_handle}&src=typed_query&count={num}"
-#     )       #       q=%40MoveTheWorld%20until%3A2021-08-05%20since%3A2021-01-01&src=typed_query
+@app.callback(
+    Output(component_id="dd-stock-multi", component_property="options"),
+    Output(component_id="dd-stock-multi", component_property="value"),
+    Output(component_id="date-picker-range-stock",
+           component_property="min_date_allowed"),
+    Output(component_id="date-picker-range-stock",
+           component_property="max_date_allowed"),
+    Output(component_id="date-picker-range-stock",
+           component_property="initial_visible_month"),
+    Output(component_id="date-picker-range-stock",
+           component_property="start_date"),
+    Output(component_id="date-picker-range-stock",
+           component_property="end_date"),
+    Input(component_id="dd-sector-single", component_property="value")
+)
+def on_sector_dd_change(industry):
+    sector_df = all_stock_df.loc[all_stock_df["Industry"] == industry]
+    stocks = [stock for stock in sector_df["Symbol"].unique()]
+    stock_options = [{"label": stock, "value": stock}for stock in stocks]
+    min_date = sector_df["Date"].min()
+    max_date = sector_df["Date"].max()
 
-#     twt_followers, twt_likes, twt_count, twt_friends, twt_name = [], [], [], [], []
-#     for line in results:
-#         twt_likes.append(line.user.favourites_count)
-#         twt_followers.append(line.user.followers_count)
-#         twt_count.append(line.user.statuses_count)
-#         twt_friends.append(line.user.friends_count)
-#         twt_name.append(line.user.screen_name)
+    return stock_options,stocks,min_date,max_date,max_date,min_date,max_date
 
-#         print(line)
-
-#     d = {
-#         "followers": twt_followers,
-#         "likes": twt_likes,
-#         "tweets": twt_count,
-#         "friends": twt_friends,
-#         "name": twt_name,
-#     }
-#     df = pd.DataFrame(d)
-#     print(df.head())
-
-#     most_followers = df.followers.max()
-#     most_folwrs_account_name = df["name"][df.followers == most_followers].values[0]
-
-#     scatter_fig = px.scatter(
-#         df, x="followers", y="likes", trendline="ols", hover_data={"name": True}
-#     )
-#     scatter_fig2 = px.scatter(
-#         df, x="friends", y="likes", trendline="ols", hover_data={"name": True}
-#     )
-#     message = f"The Twitter account that mentioned @{acnt_handle} from Jan-Aug of 2021 is called {most_folwrs_account_name} and it has the highest followers count: {most_followers} followers."
-
-#     return scatter_fig, scatter_fig2, message
+@app.callback(
+    Output(component_id="switch-percent",component_property="disabled"),
+    Output(component_id="slider-moving-average",component_property="disabled"),
+    Input(component_id="switch-candle",component_property="on"),
+)
+def on_switch_candle_change(isOn):
+    return isOn,isOn

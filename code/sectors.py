@@ -1,82 +1,94 @@
 import plotly.express as px
 import dash
+from datetime import date
 from dash import html
 from dash import dcc
+import dash_daq as daq
 from dash.dependencies import Output, Input, State
 import dash_bootstrap_components as dbc
 import pandas as pd
 from app import app
-
+from data import all_stock_df
 
 sectors_layout = html.Div(
     [
+        # Dropdown row
         dbc.Row(
             [
                 dbc.Col(
                     [
-                        html.Label("Number of results to return"),
+                        html.Label("Select Sectors"),
                         dcc.Dropdown(
-                            id="count-mentions",
-                            multi=False,
-                            value=20,
+                            id="dd-sector-multi",
+                            multi=True,
+                            value="",
                             options=[
-                                {"label": "10", "value": 10},
-                                {"label": "20", "value": 20},
-                                {"label": "30", "value": 30},
+                                {"label": stock, "value": stock}
+                                for stock in all_stock_df["Symbol"].unique()
                             ],
                             clearable=False,
                         ),
                     ],
-                    width=3,
+                    width=5,
                 ),
                 dbc.Col(
                     [
-                        html.Label("Search account handle"),
-                        dcc.Input(
-                            id="input-handle",
-                            type="text",
-                            placeholder="Mentioning this account",
-                            value="OneGreenPlanet",
-                        ),
+                        html.Label("Select Date Range"),
+                        dcc.DatePickerRange(
+                            id='date-picker-range-sector',
+                            min_date_allowed=all_stock_df["Date"].min(),
+                            max_date_allowed=all_stock_df["Date"].max(),
+                            initial_visible_month=date.today(),
+                            start_date=all_stock_df["Date"].min(),
+                            end_date=all_stock_df["Date"].max()
+                        )
                     ],
-                    width=3,
+                    width=4,
                 ),
+                dbc.Button("Apply changes", color="info",
+                           className="mr-1", id="btn-stock-run", style={"margin": "2rem"}),
             ],
             className="mt-4",
+
         ),
+        # Candlestick graph row
         dbc.Row(
             [
                 dbc.Col(
                     [
-                        html.Button(
-                            id="hit-button",
-                            children="Submit",
-                            style={"background-color": "blue", "color": "white"},
-                        )
+                        dcc.Graph(id="graph-sector", figure={}),
+
                     ],
-                    width=2,
-                )
-            ],
-            className="mt-2",
-        ),
-        dbc.Row(
-            [
-                dbc.Col([dcc.Graph(id="myscatter", figure={})], width=6),
-                dbc.Col([dcc.Graph(id="myscatter2", figure={})], width=6),
+                    width=7),
+
+
+                dbc.Col(
+                    [
+                        daq.Gauge(
+                            style={"marginTop": "6rem"},
+                            id='gauge-sector',
+                            label="Bearish-Bullish",
+                            value=6
+                        ),
+                    ],
+                    width=5),
             ]
         ),
+        # radar chart row
         dbc.Row(
             [
                 dbc.Col(
                     [
-                        html.P(
-                            id="notification",
-                            children="",
-                            style={"textAlign": "center"},
-                        )
+                        dcc.Graph(id="funnel-sector", figure={})
                     ],
-                    width=12,
-                )
+                    width=6),
+
+
+                dbc.Col(
+                    [
+                        dcc.Graph(id="indicator-sector", figure={})
+                    ],
+                    width=6),
             ]
         ),
     ]
