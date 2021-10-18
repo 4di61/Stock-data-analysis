@@ -30,7 +30,7 @@ app_tabs = html.Div(
                         dbc.Button("Download CSV", color="primary",
                                    className="mr-1", id="btn_csv"),
                         dcc.Download(id="download-dataframe-csv"),
-                    ],style={"marginLeft":"50rem"}
+                    ], style={"marginLeft": "50rem"}
                 )
             ])
 
@@ -39,7 +39,7 @@ app_tabs = html.Div(
 
 app.layout = dbc.Container([
     dbc.Row(dbc.Col(html.H1("Sectorwise Stock Trends",
-                            style={"textAlign": "center","padding":"1rem"}), width=12)),
+                            style={"textAlign": "center", "padding": "1rem"}), width=12)),
     html.Hr(),
     dbc.Row(dbc.Col(app_tabs, width=12), className="mb-3"),
     html.Div(id='content', children=[])
