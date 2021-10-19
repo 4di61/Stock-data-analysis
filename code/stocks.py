@@ -79,6 +79,10 @@ stocks_layout = html.Div(
                 dbc.Col(
                     [
                         dcc.Graph(id="graph-stock", figure={}),
+                        dbc.Row([
+                            html.H6("Rolling mean",
+                                    style={"textAlign": "center", "padding": "1rem"})
+                        ]),
                         dcc.Slider(
                             id='slider-moving-average',
                             min=1,
@@ -86,8 +90,7 @@ stocks_layout = html.Div(
                             step=1,
                             value=1,
                             tooltip={"placement": "top"}
-                        ),
-
+                        )
                     ],
                     width=8),
 
