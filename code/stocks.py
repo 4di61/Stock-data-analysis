@@ -8,9 +8,11 @@ import pandas as pd
 from app import app
 import plotly.graph_objects as go
 from data import all_stock_df, industries
-
+# -------------------------------------------------------------------------------------------------------------
+# Stock tab Layout
 stocks_layout = html.Div(
     [
+        # -------------------------------------------------------------------------------------------------------------
         # Dropdown row
         dbc.Row(
             [
@@ -55,13 +57,13 @@ stocks_layout = html.Div(
                 dbc.Row(
                     [
                         dbc.Col([daq.BooleanSwitch(
-                            id="switch-candle",
+                            id="switch-candle-stock",
                             label='Candle stick',
                             labelPosition='bottom'
                         )], style={"paddingLeft": "2rem", "paddingTop": "1rem"}),
                         dbc.Col([
                             daq.BooleanSwitch(
-                                id="switch-percent",
+                                id="switch-percent-stock",
                                 label='Percent change',
                                 labelPosition='bottom'
                             )], style={"paddingLeft": "2rem", "paddingTop": "1rem"}),
@@ -169,10 +171,10 @@ def on_stock_dd_change(stocks):
 
 
 @app.callback(
-    Output(component_id="switch-percent", component_property="disabled"),
+    Output(component_id="switch-percent-stock", component_property="disabled"),
     Output(component_id="slider-moving-average",
            component_property="disabled"),
-    Input(component_id="switch-candle", component_property="on"),
+    Input(component_id="switch-candle-stock", component_property="on"),
     State(component_id="dd-stock-multi", component_property="value"),
     prevent_initial_call=True
 )
@@ -189,8 +191,8 @@ def on_switch_candle_change(isOn, stocks):
            component_property="figure"),
     Input(component_id="btn-stock-run",
           component_property="n_clicks"),
-    State(component_id="switch-candle", component_property="on"),
-    State(component_id="switch-percent", component_property="on"),
+    State(component_id="switch-candle-stock", component_property="on"),
+    State(component_id="switch-percent-stock", component_property="on"),
     State(component_id="slider-moving-average",
           component_property="value"),
     State(component_id="dd-sector-single", component_property="value"),
@@ -205,7 +207,9 @@ def on_switch_candle_change(isOn, stocks):
 def on_apply_changes(n_clicks, candle_on, percent_on, moving_average_value, industry, stocks, start_date, end_date):
     start_datetime = pd.to_datetime(start_date)
     end_datetime = pd.to_datetime(end_date)
+# -------------------------------------------------------------------------------------------------------------
     # Stock Graph
+
     selected_stock_df = all_stock_df.loc[all_stock_df["Symbol"].isin(stocks)]
     selected_stock_df = selected_stock_df.loc[(selected_stock_df["Date"] >= start_datetime) & (
         selected_stock_df["Date"] <= end_datetime)]
@@ -233,12 +237,14 @@ def on_apply_changes(n_clicks, candle_on, percent_on, moving_average_value, indu
                                      text=data[1]["Prime minister"],)
     stock_fig.update_xaxes(rangeslider_visible=True)
 
+# -------------------------------------------------------------------------------------------------------------
     # Gauge chart
     perc_change_start = selected_stock_df.loc[selected_stock_df["Date"] ==
-                                              start_datetime, "Percent change"].mean()
+                                              start_datetime, "Close"].mean()
     perc_change_end = selected_stock_df.loc[selected_stock_df["Date"] ==
-                                            end_datetime, "Percent change"].mean()
+                                            end_datetime, "Close"].mean()
     gauge_value = 3 if perc_change_end > perc_change_start else 1
+# -------------------------------------------------------------------------------------------------------------
     # Radar chart
     radar_fig = go.Figure()
     radar_categories = selected_stock_df["Finance minister"].unique()
@@ -250,7 +256,8 @@ def on_apply_changes(n_clicks, candle_on, percent_on, moving_average_value, indu
             fill='toself',
             name=stock
         ))
-    # indicators
+# -------------------------------------------------------------------------------------------------------------
+    # Indicators
 
     data_dict = {"Symbol": [], "Initial close": [], "Final close": []}
 
