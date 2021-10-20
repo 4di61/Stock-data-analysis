@@ -10,8 +10,11 @@ import plotly.graph_objects as go
 from data import all_stock_df, industries
 from app import app
 
+# -------------------------------------------------------------------------------------------------------------
+# Sector tab Layout
 sectors_layout = html.Div(
     [
+        # -------------------------------------------------------------------------------------------------------------
         # Dropdown row
         dbc.Row(
             [
@@ -55,7 +58,8 @@ sectors_layout = html.Div(
             className="mt-4",
 
         ),
-        # Candlestick graph row
+        # -------------------------------------------------------------------------------------------------------------
+        # Sector graph row
         dbc.Row(
             [
                 dbc.Col(
@@ -84,7 +88,8 @@ sectors_layout = html.Div(
                     width=4),
             ]
         ),
-        # funnel chart row
+        # -------------------------------------------------------------------------------------------------------------
+        # Funnel chart row
         dbc.Row(
             [
                 dbc.Col(
@@ -103,6 +108,9 @@ sectors_layout = html.Div(
         ),
     ]
 )
+
+# -------------------------------------------------------------------------------------------------------------
+# Callbacks
 
 
 @app.callback(
@@ -143,10 +151,12 @@ def on_sector_dd_change(industries):
           component_property="end_date"),
     prevent_initial_call=True
 )
+# -------------------------------------------------------------------------------------------------------------
+# Graphs
 def on_apply_changes(n_clicks, percentOn, industries, start_date, end_date):
     start_datetime = pd.to_datetime(start_date)
     end_datetime = pd.to_datetime(end_date)
-#-------------------------------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------------------------------
     # Sector Graph
     selected_industry_df = all_stock_df.loc[all_stock_df["Industry"].isin(
         industries)]
@@ -169,7 +179,7 @@ def on_apply_changes(n_clicks, percentOn, industries, start_date, end_date):
                                         name=industry))
     sector_fig.update_xaxes(rangeslider_visible=True)
 
-#-------------------------------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------------------------------
     # Gauge chart
     date_wise_mean_df = selected_industry_df.groupby(
         by="Date").mean().reset_index()
@@ -177,7 +187,7 @@ def on_apply_changes(n_clicks, percentOn, industries, start_date, end_date):
     perc_change_end = date_wise_mean_df.iloc[-1]["Close"]
     gauge_value = 3 if perc_change_end > perc_change_start else 1
 
-#-------------------------------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------------------------------
     # Funnel chart
     funnel_fig = go.Figure()
     finance_minister_list = selected_industry_df["Finance minister"].unique()
@@ -191,7 +201,7 @@ def on_apply_changes(n_clicks, percentOn, industries, start_date, end_date):
             x=list(trade_sum_df.loc[industry].Trades),
             textposition="inside",
             textinfo="percent total"))
-#-------------------------------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------------------------------
     # Indicator
     indicator_fig = go.Figure()
     max_row = date_wise_mean_df.iloc[date_wise_mean_df['Percent change'].idxmax(

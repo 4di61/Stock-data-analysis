@@ -6,11 +6,13 @@ from dash.dependencies import Output, Input
 from app import app
 from data import all_stock_df
 
-# Connect to the layout and callbacks of each tab
+#-------------------------------------------------------------------------------------------------------------
+# Connect to the layout of each tab
 from stocks import stocks_layout
 from sectors import sectors_layout
 
-
+#-------------------------------------------------------------------------------------------------------------
+# App layout
 app_tabs = html.Div(
     [
         dbc.Row(
@@ -46,7 +48,8 @@ app.layout = dbc.Container([
 
 ])
 
-
+#-------------------------------------------------------------------------------------------------------------
+# Callbacks
 @app.callback(
     Output("content", "children"),
     [Input("tabs", "active_tab")]
@@ -69,4 +72,5 @@ def func(n_clicks):
 
 
 if __name__ == '__main__':
+# Running the server
     app.run_server(debug=True)

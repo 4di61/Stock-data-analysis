@@ -1,5 +1,6 @@
 import pandas as pd
-all_stock_df = pd.read_csv("D:/Documents/College docs/Sem III/Mini project/data/NIFTY50_all_modified.csv")
+from file_paths import modified_file_path
+all_stock_df = pd.read_csv(modified_file_path)
 all_stock_df["Date"] = pd.to_datetime(all_stock_df["Date"])
 industries = {}
 for industry_name in list(all_stock_df.Industry.unique()):

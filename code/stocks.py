@@ -74,7 +74,8 @@ stocks_layout = html.Div(
             className="mt-4",
 
         ),
-        # Candlestick graph row
+        # -------------------------------------------------------------------------------------------------------------
+        # Stock graph row
         dbc.Row(
             [
 
@@ -115,7 +116,8 @@ stocks_layout = html.Div(
                     width=4),
             ]
         ),
-        # radar chart row
+        # -------------------------------------------------------------------------------------------------------------
+        # Radar chart row
         dbc.Row(
             [
                 dbc.Col(
@@ -134,6 +136,9 @@ stocks_layout = html.Div(
         ),
     ]
 )
+
+# -------------------------------------------------------------------------------------------------------------
+# Callbacks
 
 
 @app.callback(
@@ -204,6 +209,8 @@ def on_switch_candle_change(isOn, stocks):
           component_property="end_date"),
     prevent_initial_call=True
 )
+# -------------------------------------------------------------------------------------------------------------
+# Graphs
 def on_apply_changes(n_clicks, candle_on, percent_on, moving_average_value, industry, stocks, start_date, end_date):
     start_datetime = pd.to_datetime(start_date)
     end_datetime = pd.to_datetime(end_date)
