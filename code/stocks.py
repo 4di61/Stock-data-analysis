@@ -220,7 +220,8 @@ def on_apply_changes(n_clicks, candle_on, percent_on, moving_average_value, indu
     selected_stock_df = all_stock_df.loc[all_stock_df["Symbol"].isin(stocks)]
     selected_stock_df = selected_stock_df.loc[(selected_stock_df["Date"] >= start_datetime) & (
         selected_stock_df["Date"] <= end_datetime)]
-
+# -------------------------------------------------------------------------------------------------------------
+    # Candle Stick Graph
     if candle_on:
         candle_stock_df = selected_stock_df.loc[selected_stock_df["Symbol"] == stocks[0]]
         stock_fig = go.Figure(data=[go.Candlestick(x=candle_stock_df['Date'],
@@ -234,6 +235,8 @@ def on_apply_changes(n_clicks, candle_on, percent_on, moving_average_value, indu
                 x=data[1]["Date"], y=0.05, xref='x', yref='paper',
                 showarrow=False, xanchor='left', text=data[1]["Prime minister"]) for data in candle_stock_df.drop_duplicates('Prime minister', keep="first").iterrows()]
         ))
+    # -------------------------------------------------------------------------------------------------------------
+    # Line Graph
     else:
         selected_stock_df["Rolling mean"] = selected_stock_df["Percent change" if percent_on else "Close"].rolling(
             window=moving_average_value).mean()

@@ -1,0 +1,7 @@
+Initialize the flow in all the edges to 0.
+
+While there is an augmenting path between the source and the sink, add this path to the flow.
+
+Update the residual graph.
+
+
